@@ -73,3 +73,20 @@ try {
   }
 };
 
+export const getCart = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const cart = await Cart.findOne({ user: userId })
+      .populate('items.product', 'name price image stock slug');
+
+    if (!cart) {
+      return res.status(200).json({ items: [], totalPrice: 0 });
+    }
+
+    res.status(200).json(cart);
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
