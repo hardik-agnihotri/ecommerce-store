@@ -90,3 +90,39 @@ export const getCart = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const removeItem = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const { productId } = req.params;
+
+    const cart = await Cart.findOne({ user: userId });
+    if (!cart) {
+      return res.status(404).json({ message: "Cart not found" });
+    }
+
+    const initialLength = cart.items.length;
+
+    cart.items = cart.items.filter(item => 
+      item.product.toString() !== productId
+    );
+
+    if (cart.items.length === initialLength) {
+      return res.status(404).json({ message: "Item not found in cart" });
+    }
+
+    cart.totalPrice = calculateTotal(cart.items);
+
+    await cart.save();
+
+    await cart.populate('items.product', 'name price image');
+
+    res.status(200).json({
+      message: "Item removed",
+      cart
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
